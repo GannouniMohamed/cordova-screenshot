@@ -22,10 +22,13 @@ import org.json.JSONException;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Matrix;
 import android.os.Environment;
 import android.util.Base64;
 import android.view.View;
-
+import android.opengl.GLES20;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class Screenshot extends CordovaPlugin {
 
@@ -42,13 +45,24 @@ public class Screenshot extends CordovaPlugin {
 			super.cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					View view = webView.getRootView();
 					try {
 						if(format.equals("png") || format.equals("jpg")){
-							view.setDrawingCacheEnabled(true);
-							Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
-							view.setDrawingCacheEnabled(false);
-							File folder = new File(Environment.getExternalStorageDirectory(), "Pictures");
+                            int width = webView.getWidth();
+                            int height = webView.getHeight();
+                         
+                            ByteBuffer buf = ByteBuffer.allocateDirect(width * height * 4);
+                            buf.order(ByteOrder.LITTLE_ENDIAN);
+                            GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
+                            
+                            Bitmap src = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                            src.copyPixelsFromBuffer(buf);
+                            
+                            Matrix matrix = new Matrix();
+                            matrix.preScale(1.0f, -1.0f);
+                            
+                            Bitmap bitmap = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+							
+                            File folder = new File(Environment.getExternalStorageDirectory(), "Pictures");
 							if (!folder.exists()) {
 								folder.mkdirs();
 							}
