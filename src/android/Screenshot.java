@@ -33,8 +33,8 @@ public class Screenshot extends CordovaPlugin {
 
     @Override
     protected void pluginInitialize() {
-        width = webView.getWidth();
-        height = webView.getHeight();
+        width = webView.getView().getWidth();
+        height = webView.getView().getHeight();
         buffer = ByteBuffer.allocateDirect(width * height * 4);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         transferBmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
